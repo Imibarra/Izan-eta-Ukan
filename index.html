@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="eu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Izan eta Ukan Ariketak - Imanol Muñoz Ibarra-</title>
+    <style>
+        :root {
+            --euskadi-red: #CE2029;
+            --euskadi-green: #009543;
+            --euskadi-white: #FFFFFF;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        #game-container {
+            background-color: var(--euskadi-white);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            border-top: 10px solid var(--euskadi-red);
+            border-bottom: 10px solid var(--euskadi-green);
+        }
+        h1 { color: var(--euskadi-green); }
+        .instructions { font-style: italic; color: #555; margin-bottom: 20px; }
+        .question-box { font-size: 1.4rem; margin: 20px 0; font-weight: bold; }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 1.1rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            width: 150px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            background-color: var(--euskadi-green);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        button:hover { opacity: 0.8; }
+        #feedback { margin: 15px 0; font-weight: bold; min-height: 24px; }
+        .correct { color: var(--euskadi-green); }
+        .incorrect { color: var(--euskadi-red); }
+        #score-board { margin-top: 20px; font-size: 0.9rem; color: #666; }
+        .hidden { display: none; }
+        .champion-screen { font-size: 1.5rem; animation: celebrate 0.5s infinite alternate; }
+        @keyframes celebrate { from { transform: scale(1); } to { transform: scale(1.05); } }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="quiz-section">
+        <h1>Izan eta Ukan Ariketak</h1>
+        <p class="instructions">Osatu hutsuneak adizki egokiarekin (izan ala ukan).</p>
+        
+        <div id="question-count"></div>
+        <div class="question-box" id="sentence-display"></div>
+        
+        <input type="text" id="user-answer" placeholder="..." autocomplete="off">
+        <div id="feedback"></div>
+        
+        <button id="action-btn" onclick="checkAnswer()">Egiaztatu</button>
+        
+        <div id="score-board">Puntuak: <span id="points">0</span> / 30</div>
+    </div>
+
+    <div id="registration-section" class="hidden">
+        <h1>ZORIONAK! 🥳</h1>
+        <p>30 puntuak lortu dituzu!</p>
+        <p>Idatzi zure izena hemen:</p>
+        <input type="text" id="player-name" placeholder="Zure izena...">
+        <br><br>
+        <button onclick="showChampion()">Jarraitu</button>
+    </div>
+
+    <div id="champion-section" class="hidden" class="champion-screen">
+        <h1 id="champion-msg"></h1>
+        <div style="font-size: 5rem;">🥇🎊🏆🎊🥇</div>
+        <p>Izan eta Ukan ariketen txapeldun berria!</p>
+        <button onclick="location.reload()">Berriro saiatu</button>
+    </div>
+</div>
+
+<script>
+    // Datos extraídos del documento 
+    const questions = [
+        // IZAN - Orain (Presente) [cite: 1]
+        { s: "Ni Bilbokoa ______.", a: "naiz" },
+        { s: "Zu oso jatorra ______.", a: "zara" },
+        { s: "Hura nire laguna ______.", a: "da" },
+        { s: "Gu urdanetako ikasleak ______.", a: "gara" },
+        { s: "Zuek, gaur, asko nekatu ______.", a: "zarete" },
+        { s: "Haiek kalera joan ______.", a: "dira" },
+        
+        // IZAN - Lehen (Pasado) [cite: 1]
+        { s: "Atzo ni etxean egon ______.", a: "nintzen" },
+        { s: "Zu iaz txikiagoa ______.", a: "zinen" },
+        { s: "Hura, pasadan urtean, irakaslea ______.", a: "zen" },
+        { s: "Pasadan abenduan Baratzen egon ______.", a: "ginen" },
+        { s: "Zuek ez ______ joan matematikako olimpiadetara.", a: "zineten" },
+        { s: "Haiek Donostian egon ______ pasadan astean.", a: "ziren" },
+
+        // UKAN - Orain (Presente) [cite: 4]
+        { s: "Nik liburu bat ______ (singularra - oraina).", a: "dut" },
+        { s: "Nik bi katu ______ (plurala - oraina).", a: "ditut" },
+        { s: "Zuk giltza bat ______ (singularra - oraina).", a: "duzu" },
+        { s: "Zuk loreak ______ (plurala - oraina).", a: "dituzu" },
+        { s: "Hark auto gorria ______ (singularra - oraina).", a: "du" },
+        { s: "Hark lagun asko ______ (plurala - oraina).", a: "ditu" },
+        { s: "Guk etxe bat ______ (singularra - oraina).", a: "dugu" },
+        { s: "Guk hiru txakur ______ (plurala - oraina).", a: "ditugu" },
+        { s: "Zuek ogia ______ (singularra - oraina).", a: "duzue" },
+        { s: "Zuek gozokiak ______ (plurala - oraina).", a: "duzue" },
+        { s: "Haiek logela ______ (singularra - oraina).", a: "dute" },
+        { s: "Haiek galderak ______ (plurala - oraina).", a: "dituzte" },
+
+        // UKAN - Lehen (Pasado) [cite: 4]
+        { s: "Nik lehen gose handia ______ (singularra - lehenaldia).", a: "nuen" },
+        { s: "Nik gozoki asko jan ______ (plurala - lehenaldia).", a: "nituen" },
+        { s: "Zuk atzo lan handia egin ______ (singularra - lehenaldia).", a: "zenuen" },
+        { s: "Zuk, iaz, opari asko izan ______ (plurala - iragana).", a: "zenituen" },
+        { s: "Guk pilota apurtu ______ (singularra - lehenaldia).", a: "genuen" },
+        { s: "Haiek zorte ona izan ______ (singularra - lehenaldia).", a: "zuten" }
+    ];
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let points = 0;
+    let firstAttempt = true;
+
+    function initGame() {
+        currentQuestions = [...questions].sort(() => Math.random() - 0.5);
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = currentQuestions[currentIndex];
+        document.getElementById("sentence-display").innerText = q.s;
+        document.getElementById("question-count").innerText = `${currentIndex + 1} / 30`;
+        document.getElementById("user-answer").value = "";
+        document.getElementById("feedback").innerText = "";
+        document.getElementById("action-btn").innerText = "Egiaztatu";
+        document.getElementById("action-btn").onclick = checkAnswer;
+        firstAttempt = true;
+    }
+
+    function checkAnswer() {
+        const userVal = document.getElementById("user-answer").value.toLowerCase().trim();
+        const correctVal = currentQuestions[currentIndex].a.toLowerCase();
+        const feedback = document.getElementById("feedback");
+
+        if (userVal === correctVal) {
+            feedback.innerText = "Erantzun zuzena! ✨";
+            feedback.className = "correct";
+            if (firstAttempt) points++;
+            document.getElementById("points").innerText = points;
+            
+            document.getElementById("action-btn").innerText = "Hurrengoa";
+            document.getElementById("action-btn").onclick = nextQuestion;
+        } else {
+            feedback.innerText = `Erantzun okerra. Zuzena hau da: ${correctVal}`;
+            feedback.className = "incorrect";
+            firstAttempt = false;
+        }
+    }
+
+    function nextQuestion() {
+        currentIndex++;
+        if (currentIndex < 30) {
+            showQuestion();
+        } else {
+            finishGame();
+        }
+    }
+
+    function finishGame() {
+        if (points === 30) {
+            document.getElementById("quiz-section").classList.add("hidden");
+            document.getElementById("registration-section").classList.remove("hidden");
+        } else {
+            alert(`Bukatu duzu! ${points} puntu lortu dituzu. Saiatu berriro 30ak lortzeko!`);
+            location.reload();
+        }
+    }
+
+    function showChampion() {
+        const name = document.getElementById("player-name").value || "Txapelduna";
+        document.getElementById("registration-section").classList.add("hidden");
+        document.getElementById("champion-section").classList.remove("hidden");
+        document.getElementById("champion-msg").innerText = `${name}`;
+    }
+
+    initGame();
+</script>
+
+</body>
+</html>
