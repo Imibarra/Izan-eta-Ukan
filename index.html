@@ -146,6 +146,8 @@
       margin-bottom: 26px;
     }
 
+    .exercise-options { grid-template-columns: repeat(2, 1fr); }
+
     .mode-option {
       min-height: 82px;
       padding: 14px;
@@ -420,7 +422,7 @@
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
     @media (max-width: 700px) {
-      .mode-options { grid-template-columns: 1fr; }
+      .mode-options, .exercise-options { grid-template-columns: 1fr; }
       .round-options { grid-template-columns: repeat(2, 1fr); }
       .game-top { grid-template-columns: 1fr 1fr; }
       .progress-wrap { grid-column: 1 / -1; }
@@ -450,9 +452,14 @@
             <h1>IZAN eta UKAN</h1>
             <button class="help-button" type="button" data-open-help>Nola jokatu?</button>
           </div>
-          <p class="subtitle">Aukeratu orainaldia, lehenaldia edo biak nahastuta.</p>
+          <p class="subtitle">Aukeratu zer landu, aditz-denbora eta partidaren luzera.</p>
         </header>
         <div class="content">
+          <span class="section-label">Aukeratu zer landu</span>
+          <div class="mode-options exercise-options" role="group" aria-label="Jarduera mota">
+            <button class="mode-option" type="button" data-exercise="auxiliary" aria-pressed="true">Aditz laguntzaileak</button>
+            <button class="mode-option" type="button" data-exercise="pronoun" aria-pressed="false">Izenordainak</button>
+          </div>
           <span class="section-label">Aukeratu aditz-denbora</span>
           <div class="mode-options" role="group" aria-label="Aditz-denbora">
             <button class="mode-option" type="button" data-mode="orainaldia" aria-pressed="true">Orainaldia</button>
@@ -547,12 +554,13 @@
     <div class="dialog-head"><h2 id="help-title">Nola jokatu?</h2></div>
     <div class="dialog-body">
       <ol class="steps">
+        <li>Aukeratu <strong>Aditz laguntzaileak</strong> edo <strong>Izenordainak</strong>.</li>
         <li>Aukeratu <strong>Orainaldia</strong>, <strong>Lehenaldia</strong> edo <strong>Nahastuta</strong>.</li>
         <li>Aukeratu zenbat galdera egin nahi dituzun. Arbelean bost esaldi batera erakusteko, sakatu <strong>Arbela</strong>.</li>
-        <li>Irakurri esaldia eta idatzi hutsunean <strong>IZAN</strong> edo <strong>UKAN</strong> aditzaren forma egokia.</li>
+        <li>Irakurri esaldia eta idatzi hutsunean aditz laguntzailea edo izenordain egokia.</li>
         <li>Sakatu <strong>Egiaztatu</strong>. Erantzuna zuzendu ondoren, joan hurrengo galderara.</li>
       </ol>
-      <p class="example"><strong>Adibidea:</strong> Orainaldia: gu oso puntualak <strong>gara</strong>. Lehenaldia: gu oso puntualak <strong>ginen</strong>.</p>
+      <p class="example"><strong>Adibideak:</strong> Gu oso puntualak <strong>gara</strong>. · <strong>Nik</strong> auto berri bat erosi dut.</p>
       <div class="button-row"><button id="close-help" class="button button-primary" type="button">Ulertu dut</button></div>
     </div>
   </dialog>
@@ -688,6 +696,121 @@
       pastAnswer: pastForms[presentAnswer]
     }));
 
+    const pronounQuestions = [
+      ["liburu berria ikusi dute.", "liburu berria ikusi zuten.", "Haiek"],
+      ["hondartzatik berandu etorri zarete.", "hondartzatik berandu etorri zineten.", "Zuek"],
+      ["ez zara konturatu Jon falta zenik.", "ez zinen konturatu Jon falta zenik.", "Zu"],
+      ["pastelak eraman ditugu eskolara.", "pastelak eraman genituen eskolara.", "Guk"],
+      ["auto berri bat erosi dut.", "auto berri bat erosi nuen.", "Nik"],
+      ["klasera igo gara oso goiz.", "klasera igo ginen oso goiz.", "Gu"],
+      ["pilotak hartu dituzte.", "pilotak hartu zituzten.", "Haiek"],
+      ["patiora jaitsi dira lehenak.", "patiora jaitsi ziren lehenak.", "Haiek"],
+      ["ordenagailu berriak erabili ditut.", "ordenagailu berriak erabili nituen.", "Nik"],
+      ["zineman pelikula hori ikusi duzue.", "zineman pelikula hori ikusi zenuten.", "Zuek"],
+      ["gaur garaiz iritsi naiz.", "gaur garaiz iritsi nintzen.", "Ni"],
+      ["ate ondoan geratu zara.", "ate ondoan geratu zinen.", "Zu"],
+      ["mendira joan da lagunekin.", "mendira joan zen lagunekin.", "Bera"],
+      ["korrika etorri gara.", "korrika etorri ginen.", "Gu"],
+      ["isilik geratu zarete.", "isilik geratu zineten.", "Zuek"],
+      ["etxera itzuli dira.", "etxera itzuli ziren.", "Haiek"],
+      ["gosaria prestatu dut.", "gosaria prestatu nuen.", "Nik"],
+      ["motxila urdina ekarri duzu.", "motxila urdina ekarri zenuen.", "Zuk"],
+      ["leihoa ireki du.", "leihoa ireki zuen.", "Berak"],
+      ["irratia entzun dugu.", "irratia entzun genuen.", "Guk"],
+      ["ariketa bukatu duzue.", "ariketa bukatu zenuten.", "Zuek"],
+      ["atea itxi dute.", "atea itxi zuten.", "Haiek"],
+      ["hiru sagar jan ditut.", "hiru sagar jan nituen.", "Nik"],
+      ["bi ipuin irakurri dituzu.", "bi ipuin irakurri zenituen.", "Zuk"],
+      ["lau argazki atera ditu.", "lau argazki atera zituen.", "Berak"],
+      ["mahaiak garbitu ditugu.", "mahaiak garbitu genituen.", "Guk"],
+      ["abesti berriak entzun dituzue.", "abesti berriak entzun zenituzten.", "Zuek"],
+      ["galdera guztiak erantzun dituzte.", "galdera guztiak erantzun zituzten.", "Haiek"],
+      ["oso pozik geratu naiz.", "oso pozik geratu nintzen.", "Ni"],
+      ["eskaileretan erori zara.", "eskaileretan erori zinen.", "Zu"],
+      ["gelara sartu da.", "gelara sartu zen.", "Bera"],
+      ["autobusez etorri gara.", "autobusez etorri ginen.", "Gu"],
+      ["hondartzara joan zarete.", "hondartzara joan zineten.", "Zuek"],
+      ["jolastokira atera dira.", "jolastokira atera ziren.", "Haiek"],
+      ["ez dut txakurrik ikusi.", "ez nuen txakurrik ikusi.", "Nik"],
+      ["ez duzu lana bukatu.", "ez zenuen lana bukatu.", "Zuk"],
+      ["ez du liburua ekarri.", "ez zuen liburua ekarri.", "Berak"],
+      ["ez dugu pelikula ikusi.", "ez genuen pelikula ikusi.", "Guk"],
+      ["ez duzue atea itxi.", "ez zenuten atea itxi.", "Zuek"],
+      ["ez dute ariketa egin.", "ez zuten ariketa egin.", "Haiek"],
+      ["ikasle berria naiz.", "ikasle berria nintzen.", "Ni"],
+      ["nire lagunik onena zara.", "nire lagunik onena zinen.", "Zu"],
+      ["gure irakaslea da.", "gure irakaslea zen.", "Bera"],
+      ["talde berekoak gara.", "talde berekoak ginen.", "Gu"],
+      ["oso lagun onak zarete.", "oso lagun onak zineten.", "Zuek"],
+      ["auzokoak dira.", "auzokoak ziren.", "Haiek"],
+      ["koaderno gorria dut.", "koaderno gorria nuen.", "Nik"],
+      ["bi boligrafo urdin dituzu.", "bi boligrafo urdin zenituen.", "Zuk"],
+      ["anaia txiki bat du.", "anaia txiki bat zuen.", "Berak"],
+      ["patio handi bat dugu.", "patio handi bat genuen.", "Guk"],
+      ["lau mahai dituzue.", "lau mahai zenituzten.", "Zuek"],
+      ["liburu bana dute.", "liburu bana zuten.", "Haiek"],
+      ["lagunekin elkartu naiz.", "lagunekin elkartu nintzen.", "Ni"],
+      ["Maialenekin elkartu zara.", "Maialenekin elkartu zinen.", "Zu"],
+      ["goiz jaiki da.", "goiz jaiki zen.", "Bera"],
+      ["oso azkar jaitsi gara.", "oso azkar jaitsi ginen.", "Gu"],
+      ["lorategira atera zarete.", "lorategira atera zineten.", "Zuek"],
+      ["teilatura igo dira.", "teilatura igo ziren.", "Haiek"],
+      ["etxeko lan guztiak egin ditut.", "etxeko lan guztiak egin nituen.", "Nik"],
+      ["bi marrazki margotu dituzu.", "bi marrazki margotu zenituen.", "Zuk"],
+      ["leiho guztiak ireki ditu.", "leiho guztiak ireki zituen.", "Berak"],
+      ["bost galdera prestatu ditugu.", "bost galdera prestatu genituen.", "Guk"],
+      ["bi partida irabazi dituzue.", "bi partida irabazi zenituzten.", "Zuek"],
+      ["gol asko sartu dituzte.", "gol asko sartu zituzten.", "Haiek"],
+      ["ez naiz berandu iritsi.", "ez nintzen berandu iritsi.", "Ni"],
+      ["ez zara eskolara joan.", "ez zinen eskolara joan.", "Zu"],
+      ["ez da etxetik atera.", "ez zen etxetik atera.", "Bera"],
+      ["ez gara autobusez etorri.", "ez ginen autobusez etorri.", "Gu"],
+      ["ez zarete festara joan.", "ez zineten festara joan.", "Zuek"],
+      ["ez dira garaiz heldu.", "ez ziren garaiz heldu.", "Haiek"],
+      ["sarrera bat erosi dut.", "sarrera bat erosi nuen.", "Nik"],
+      ["ogitartekoa prestatu duzu.", "ogitartekoa prestatu zenuen.", "Zuk"],
+      ["marrazki bat egin du.", "marrazki bat egin zuen.", "Berak"],
+      ["dokumentala ikusi dugu.", "dokumentala ikusi genuen.", "Guk"],
+      ["ipuina entzun duzue.", "ipuina entzun zenuten.", "Zuek"],
+      ["proiektua bukatu dute.", "proiektua bukatu zuten.", "Haiek"],
+      ["giltzak aurkitu ditut.", "giltzak aurkitu nituen.", "Nik"],
+      ["zapatak garbitu dituzu.", "zapatak garbitu zenituen.", "Zuk"],
+      ["hiru mezu idatzi ditu.", "hiru mezu idatzi zituen.", "Berak"],
+      ["liburuak ordenatu ditugu.", "liburuak ordenatu genituen.", "Guk"],
+      ["zuhaitzak marraztu dituzue.", "zuhaitzak marraztu zenituzten.", "Zuek"],
+      ["azterketak prestatu dituzte.", "azterketak prestatu zituzten.", "Haiek"],
+      ["oso nekatuta iritsi naiz.", "oso nekatuta iritsi nintzen.", "Ni"],
+      ["bakarrik geratu zara.", "bakarrik geratu zinen.", "Zu"],
+      ["pozik atera da eskolatik.", "pozik atera zen eskolatik.", "Bera"],
+      ["plazan elkartu gara.", "plazan elkartu ginen.", "Gu"],
+      ["berandu itzuli zarete.", "berandu itzuli zineten.", "Zuek"],
+      ["korrika igo dira.", "korrika igo ziren.", "Haiek"],
+      ["ura edan dut.", "ura edan nuen.", "Nik"],
+      ["galdera erantzun duzu.", "galdera erantzun zenuen.", "Zuk"],
+      ["bizikleta berria erosi du.", "bizikleta berria erosi zuen.", "Berak"],
+      ["bazkaria prestatu dugu.", "bazkaria prestatu genuen.", "Guk"],
+      ["albistea irakurri duzue.", "albistea irakurri zenuten.", "Zuek"],
+      ["txapelketa irabazi dute.", "txapelketa irabazi zuten.", "Haiek"],
+      ["bi katu ikusi ditut.", "bi katu ikusi nituen.", "Nik"],
+      ["opari guztiak ireki dituzu.", "opari guztiak ireki zenituen.", "Zuk"],
+      ["hiru abesti kantatu ditu.", "hiru abesti kantatu zituen.", "Berak"],
+      ["argazkiak aukeratu ditugu.", "argazkiak aukeratu genituen.", "Guk"],
+      ["ariketa guztiak zuzendu dituzue.", "ariketa guztiak zuzendu zenituzten.", "Zuek"],
+      ["jostailuak bildu dituzte.", "jostailuak bildu zituzten.", "Haiek"]
+    ].map(([presentSentence, pastSentence, answer], index) => ({
+      id: index + 1,
+      presentSentence,
+      pastSentence,
+      answer,
+      acceptedAnswers: answer === "Bera"
+        ? ["Bera", "Hura"]
+        : answer === "Berak"
+          ? ["Berak", "Hark"]
+          : answer === "Haiek"
+            ? ["Haiek", "Beraiek"]
+            : [answer]
+    }));
+
     const $ = (selector) => document.querySelector(selector);
     const screens = [$("#start-screen"), $("#game-screen"), $("#results-screen"), $("#board-screen")];
     const helpDialog = $("#help-dialog");
@@ -698,6 +821,7 @@
 
     let selectedCount = 20;
     let selectedMode = "orainaldia";
+    let selectedExercise = "auxiliary";
     let round = [];
     let boardRound = [];
     let revealedBoardAnswers = new Set();
@@ -728,18 +852,54 @@
       return mode === "orainaldia" ? "Orainaldia" : mode === "lehenaldia" ? "Lehenaldia" : "Nahastuta";
     }
 
+    function exerciseName(exercise = selectedExercise) {
+      return exercise === "pronoun" ? "Izenordainak" : "Aditz laguntzaileak";
+    }
+
+    function exercisePrompt(exercise = selectedExercise) {
+      return exercise === "pronoun"
+        ? "Bete hutsunea izenordain egokiarekin."
+        : "Bete hutsunea aditz-forma egokiarekin.";
+    }
+
     function buildRound(count) {
       const mixedStartsWithPast = Math.random() < .5;
-      return shuffle(questions).slice(0, count).map((question, index) => {
+      const pool = selectedExercise === "pronoun" ? pronounQuestions : questions;
+      return shuffle(pool).slice(0, count).map((question, index) => {
         const tense = selectedMode === "nahastuta"
           ? ((index % 2 === 0) === mixedStartsWithPast ? "lehenaldia" : "orainaldia")
           : selectedMode;
+        if (selectedExercise === "pronoun") {
+          return {
+            ...question,
+            key: `pronoun-${question.id}-${tense}`,
+            exercise: "pronoun",
+            tense,
+            before: "",
+            after: tense === "orainaldia" ? question.presentSentence : question.pastSentence
+          };
+        }
         return {
           ...question,
+          key: `auxiliary-${question.id}-${tense}`,
+          exercise: "auxiliary",
           tense,
           answer: tense === "orainaldia" ? question.presentAnswer : question.pastAnswer
         };
       });
+    }
+
+    function appendSentenceWithBlank(container, question, blank) {
+      container.replaceChildren();
+      if (question.before) container.append(document.createTextNode(`${question.before} `));
+      const suffix = /^[.,!?;:]/.test(question.after) ? question.after : ` ${question.after}`;
+      container.append(blank, document.createTextNode(suffix));
+    }
+
+    function completedSentence(question) {
+      const beginning = question.before ? `${question.before} ${question.answer}` : question.answer;
+      const suffix = /^[.,!?;:]/.test(question.after) ? question.after : ` ${question.after}`;
+      return `${beginning}${suffix}`;
     }
 
     function formatTime(totalSeconds) {
@@ -765,7 +925,7 @@
       clearInterval(timerId);
       timerId = setInterval(updateTimer, 1000);
       $("#time-stat").textContent = "00:00";
-      $("#game-subtitle").textContent = `${modeName()} · Bete hutsunea aditz-forma egokiarekin.`;
+      $("#game-subtitle").textContent = `${exerciseName()} · ${modeName()} · ${exercisePrompt()}`;
       showScreen($("#game-screen"));
       renderQuestion();
     }
@@ -785,8 +945,6 @@
       checkButton.hidden = false;
       nextButton.hidden = true;
 
-      sentence.replaceChildren();
-      sentence.append(document.createTextNode(`${question.before} `));
       const input = document.createElement("input");
       input.id = "answer-input";
       input.className = "answer-input";
@@ -794,10 +952,9 @@
       input.autocomplete = "off";
       input.autocapitalize = "none";
       input.spellcheck = false;
-      input.maxLength = 12;
-      input.setAttribute("aria-label", "Idatzi falta den aditz-forma");
-      const suffix = /^[.,!?;:]/.test(question.after) ? question.after : ` ${question.after}`;
-      sentence.append(input, document.createTextNode(suffix));
+      input.maxLength = question.exercise === "pronoun" ? 8 : 12;
+      input.setAttribute("aria-label", question.exercise === "pronoun" ? "Idatzi falta den izenordaina" : "Idatzi falta den aditz-forma");
+      appendSentenceWithBlank(sentence, question, input);
       requestAnimationFrame(() => input.focus());
     }
 
@@ -819,7 +976,8 @@
       answered = true;
       input.disabled = true;
       const question = round[currentIndex];
-      const isCorrect = value === normalized(question.answer);
+      const acceptedAnswers = question.acceptedAnswers || [question.answer];
+      const isCorrect = acceptedAnswers.some(answer => value === normalized(answer));
 
       if (isCorrect) {
         score += 1;
@@ -853,7 +1011,7 @@
     function openBoard() {
       boardRound = buildRound(5);
       revealedBoardAnswers = new Set();
-      $("#board-subtitle").textContent = `${modeName()} · Kopiatu esaldiak koadernoan eta bete hutsuneak.`;
+      $("#board-subtitle").textContent = `${exerciseName()} · ${modeName()} · Kopiatu esaldiak koadernoan eta bete hutsuneak.`;
       renderBoard();
       showScreen($("#board-screen"));
     }
@@ -871,40 +1029,38 @@
 
         const line = document.createElement("div");
         line.className = "board-sentence";
-        line.append(document.createTextNode(`${question.before} `));
         const blank = document.createElement("span");
         blank.className = "board-blank";
         blank.setAttribute("aria-label", "hutsunea");
-        const suffix = /^[.,!?;:]/.test(question.after) ? question.after : ` ${question.after}`;
-        line.append(blank, document.createTextNode(suffix));
+        appendSentenceWithBlank(line, question, blank);
 
         const answer = document.createElement("span");
         answer.className = "board-answer";
         answer.textContent = `Erantzuna: ${question.answer}`;
-        answer.hidden = !revealedBoardAnswers.has(question.id);
+        answer.hidden = !revealedBoardAnswers.has(question.key);
 
         const revealButton = document.createElement("button");
         revealButton.className = "board-reveal";
         revealButton.type = "button";
-        revealButton.textContent = revealedBoardAnswers.has(question.id) ? "Ezkutatu" : "Erantzuna";
-        revealButton.setAttribute("aria-expanded", String(revealedBoardAnswers.has(question.id)));
+        revealButton.textContent = revealedBoardAnswers.has(question.key) ? "Ezkutatu" : "Erantzuna";
+        revealButton.setAttribute("aria-expanded", String(revealedBoardAnswers.has(question.key)));
         revealButton.addEventListener("click", () => {
-          if (revealedBoardAnswers.has(question.id)) revealedBoardAnswers.delete(question.id);
-          else revealedBoardAnswers.add(question.id);
+          if (revealedBoardAnswers.has(question.key)) revealedBoardAnswers.delete(question.key);
+          else revealedBoardAnswers.add(question.key);
           renderBoard();
         });
 
         item.append(tense, line, answer, revealButton);
         list.append(item);
       });
-      const allVisible = boardRound.length > 0 && boardRound.every(question => revealedBoardAnswers.has(question.id));
+      const allVisible = boardRound.length > 0 && boardRound.every(question => revealedBoardAnswers.has(question.key));
       $("#all-solutions-button").textContent = allVisible ? "Erantzunak ezkutatu" : "Erantzun guztiak";
     }
 
     function toggleAllBoardAnswers() {
-      const allVisible = boardRound.length > 0 && boardRound.every(question => revealedBoardAnswers.has(question.id));
+      const allVisible = boardRound.length > 0 && boardRound.every(question => revealedBoardAnswers.has(question.key));
       if (allVisible) revealedBoardAnswers.clear();
-      else boardRound.forEach(question => revealedBoardAnswers.add(question.id));
+      else boardRound.forEach(question => revealedBoardAnswers.add(question.key));
       renderBoard();
     }
 
@@ -931,7 +1087,7 @@
       mistakes.forEach(question => {
         const item = document.createElement("li");
         item.className = "review-item";
-        const fullSentence = `${question.before} ${question.answer} ${question.after}`.replace(/\s+\./g, ".");
+        const fullSentence = completedSentence(question);
         const shownAnswer = question.userAnswer || "—";
         item.innerHTML = `<span class="review-sentence">${modeName(question.tense)} · ${fullSentence}</span><span class="review-answer">Zure erantzuna: <strong>${escapeHtml(shownAnswer)}</strong> · Erantzun zuzena: <strong>${question.answer}</strong></span>`;
         reviewList.append(item);
@@ -954,6 +1110,13 @@
       button.addEventListener("click", () => {
         selectedMode = button.dataset.mode;
         document.querySelectorAll("[data-mode]").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+      });
+    });
+
+    document.querySelectorAll("[data-exercise]").forEach(button => {
+      button.addEventListener("click", () => {
+        selectedExercise = button.dataset.exercise;
+        document.querySelectorAll("[data-exercise]").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
       });
     });
 
